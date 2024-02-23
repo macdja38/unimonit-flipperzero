@@ -16,7 +16,7 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 #include "UnitempViews.h"
-#include "unitemp_icons.h"
+#include "unimonit_icons.h"
 
 extern const Icon I_WarningDolphinFlip_45x42;
 
