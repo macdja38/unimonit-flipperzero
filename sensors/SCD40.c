@@ -24,11 +24,13 @@
 #include "../interfaces/endianness.h"
 //#include <3rdparty/everest/include/everest/kremlin/c_endianness.h>
 
+#ifndef UNITEMP_SCD40
 bool unitemp_SCD40_alloc(Sensor* sensor, char* args);
 bool unitemp_SCD40_init(Sensor* sensor);
 bool unitemp_SCD40_deinit(Sensor* sensor);
 UnitempStatus unitemp_SCD40_update(Sensor* sensor);
 bool unitemp_SCD40_free(Sensor* sensor);
+#endif
 
 const SensorType SCD40 = {
     .typename = "SCD40",

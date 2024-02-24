@@ -1,24 +1,21 @@
 ![Flipper usage](https://user-images.githubusercontent.com/10090793/211182642-e41919c5-3091-4125-815a-2d6a77a859f6.png)
-# Unitemp - Universal temperature sensor reader
+# UniMonit - Universal environmental sensor reader
 [![GitHub release](https://img.shields.io/github/release/quen0n/unitemp-flipperzero?include_prereleases=&sort=semver&color=blue)](https://github.com/quen0n/unitemp-flipperzero/releases/)
 [![GitHub](https://img.shields.io/github/license/quen0n/unitemp-flipperzero)](https://github.com/quen0n/unitemp-flipperzero/blob/dev/LICENSE.md)
 [![Build dev](https://github.com/quen0n/unitemp-flipperzero/actions/workflows/build_dev.yml/badge.svg?branch=dev)](https://github.com/quen0n/unitemp-flipperzero/actions/workflows/build_dev.yml)  
-[Flipper Zero](https://flipperzero.one/) application for reading temperature, humidity and pressure sensors like a DHT11/22, DS18B20, BMP280, HTU21 and more. 
+[Flipper Zero](https://flipperzero.one/) application for reading temperature, humidity, pressure, co2 and particulate matter sensors like a DHT11/22, DS18B20, BMP280, HTU21 and more. 
+A fork of the popular Unitemp project. They probably can't be installed at the same time.
 ## List of supported sensors
 ![image](https://user-images.githubusercontent.com/10090793/215605424-54b1c08c-e41b-4fb4-b966-dd959507200b.png)
 
 ## Installation
-Download and install from application catalog https://lab.flipper.net/apps/unitemp or mobile application  
-...or install the application manually:
-1) Download [latest version](https://cloud.quenon.ru/index.php/s/h98rT9UnaOL4wxR/download?path=%2F&files=unitemp-latest.fap)
-2) Copy `unitemp-latest.fap` to `SD card/apps/GPIO` with qFlipper or mobile application
-3) Open application on your Flipper: `Applications->GPIO->Temp sensors reader`  
-Note: If you get the message "API version mismatch" after updating the firmware, download and install Unitemp again
-## Need help? Discussions?
-Join the discussion, ask a question or just send a photo of the flipper with sensors to [Discord](https://discord.com/channels/740930220399525928/1056727938747351060). [Invite link](https://discord.com/invite/flipper)
+1) Clone the repo
+2) install [uFBT](https://github.com/flipperdevices/flipperzero-ufbt?tab=readme-ov-file#installation)
+3) In the repo folder of a computer connect to a flipper run `ufbt launch`
 ## Gratitudes
 Thanks to [@Svaarich](https://github.com/Svaarich) for the UI design and to the Unleashed firmware community for sensors testing and feedbacks.
-
+Thanks to the original Unitemp project that this is still mostly the same as
+Thanks to [@divinebird](https://github.com/quen0n/unitemp-flipperzero/pull/16) for their work on adding the carbon monoxide sensor
 ## Some community photos
 ![image](https://user-images.githubusercontent.com/10090793/210120132-7ddbc937-0a6b-4472-bd1c-7fbc3ecdf2ad.png)
 ![image](https://user-images.githubusercontent.com/10090793/210120135-12fc5810-77ff-49db-b799-e9479e1f57a7.png)

@@ -35,6 +35,11 @@ typedef enum carousel_info {
     CAROUSEL_INFO, //Отображение информации о датчике
 } carousel_info;
 
+typedef enum draw_size_types {
+    QUARTER,
+    WIDE
+} draw_size_type;
+
 static general_view current_view;
 
 carousel_info carousel_info_selector = CAROUSEL_VALUES;
@@ -179,6 +184,73 @@ static void _draw_co2(Canvas* canvas, Sensor* sensor, Color color) {
         canvas, x + 70, y + 10, AlignRight, AlignCenter, app->buff);
 }
 
+static void _draw_pm(Canvas* canvas, Color color, float concentration, const Icon* icon, const uint8_t pos[2], draw_size_type draw_size) {
+    const uint8_t x = pos[0], y = pos[1];
+    const uint8_t width = draw_size == QUARTER ? 54 : 75;
+    //Рисование рамки
+    canvas_draw_rframe(canvas, x, y, width, 20, 3);
+    if(color == ColorBlack) {
+        canvas_draw_rbox(canvas, x, y, width, 19, 3);
+        canvas_invert_color(canvas);
+    } else {
+        canvas_draw_rframe(canvas, x, y, width, 19, 3);
+    }
+
+    //Рисование иконки
+    canvas_draw_icon(canvas, x + 3, y + 2, icon);
+
+    int16_t concentration_int = concentration;
+    int8_t concentration_dec = (int8_t)((concentration - concentration_int) * 10);
+
+    //Целая часть
+    if(concentration_int > 999) {
+        snprintf(app->buff, BUFF_SIZE, "MAX  ");
+        canvas_set_font(canvas, FontPrimary);
+    }
+    else {
+        bool display_decimal = concentration_int < 100;
+
+        uint8_t decimal_width = 0;
+        if (display_decimal) {
+            snprintf(app->buff, BUFF_SIZE, ".%d", concentration_dec);
+            canvas_set_font(canvas, FontPrimary);
+            decimal_width = canvas_string_width(canvas, app->buff);
+        }
+
+        snprintf((char*)(app->buff), BUFF_SIZE, "%d", concentration_int);
+        canvas_set_font(canvas, FontBigNumbers);
+        canvas_draw_str_aligned(
+            canvas,
+            x + width - 3 - 1 - decimal_width, // width -3 for border, -1 to give the decimal some space
+            y + 10,
+            AlignRight,
+            AlignCenter,
+            app->buff);
+        if(display_decimal) {
+            snprintf(app->buff, BUFF_SIZE, ".%d", concentration_dec);
+            canvas_set_font(canvas, FontPrimary);
+            canvas_draw_str_aligned(canvas, x + width - 3, y + 10 + 3, AlignRight, AlignCenter, app->buff);
+            // canvas_draw_str(canvas, x + 27 + int_len / 2 + 2, y + 10 + 7, app->buff);
+        }
+    }
+}
+
+static void _draw_pm_1_0(Canvas* canvas, Sensor* sensor, Color color, const uint8_t pos[2], draw_size_type draw_size) {
+    _draw_pm(canvas, color, sensor->mc_1p0, &I_pm_1_0_15x15, pos, draw_size);
+}
+
+static void _draw_pm_2_5(Canvas* canvas, Sensor* sensor, Color color, const uint8_t pos[2], draw_size_type draw_size) {
+    _draw_pm(canvas, color, sensor->mc_2p5, &I_pm_2_5_15x15, pos, draw_size);
+}
+
+static void _draw_pm_4_0(Canvas* canvas, Sensor* sensor, Color color, const uint8_t pos[2], draw_size_type draw_size) {
+    _draw_pm(canvas, color, sensor->mc_4p0, &I_pm_4_0_15x15, pos, draw_size);
+}
+
+static void _draw_pm_10_0(Canvas* canvas, Sensor* sensor, Color color, const uint8_t pos[2], draw_size_type draw_size) {
+    _draw_pm(canvas, color, sensor->mc_10p0, &I_pm_10_0_15x15, pos, draw_size);
+}
+
 static void _draw_singleSensor(Canvas* canvas, Sensor* sensor, const uint8_t pos[2], Color color) {
     canvas_set_font(canvas, FontPrimary);
 
@@ -297,6 +369,13 @@ static void _draw_carousel_values(Canvas* canvas) {
 
     static const uint8_t temp_positions[3][2] = {{37, 23}, {37, 16}, {9, 16}};
     static const uint8_t hum_positions[2][2] = {{37, 38}, {65, 16}};
+    const uint8_t value_positions[][4][2] = {
+        {{37, 16}}, //1 датчик one top
+        {{37, 16}, {37, 38}}, //2 датчика one on top, one on bottom
+        {{9, 3}, {65, 3}, {37, 38}}, //3 датчика two on top, one on bottom
+        {{9, 16}, {65, 16}, {9, 38}, {65, 38}}}; //4 датчика two on top, two on bottom
+
+    // static const uint8_t pm_positions[4][2] = {{27, 23}, {37, 16}, {}};
     //Селектор значений для отображения
     switch(unitemp_sensor_getActive(generalview_sensor_index)->type->datatype) {
     case UT_DATA_TYPE_TEMP:
@@ -346,6 +425,12 @@ static void _draw_carousel_values(Canvas* canvas) {
             ColorWhite);
         _draw_humidity(canvas, unitemp_sensor_getActive(generalview_sensor_index), hum_positions[1]);
         _draw_co2(canvas, unitemp_sensor_getActive(generalview_sensor_index), ColorWhite);
+        break;
+    case UT_DATA_TYPE_PM:
+        _draw_pm_1_0(canvas, unitemp_sensor_getActive(generalview_sensor_index), ColorWhite, value_positions[3][0], QUARTER);
+        _draw_pm_2_5(canvas, unitemp_sensor_getActive(generalview_sensor_index), ColorWhite, value_positions[3][1], QUARTER);
+        _draw_pm_4_0(canvas, unitemp_sensor_getActive(generalview_sensor_index), ColorWhite, value_positions[3][2], QUARTER);
+        _draw_pm_10_0(canvas, unitemp_sensor_getActive(generalview_sensor_index), ColorWhite, value_positions[3][3], QUARTER);
         break;
     }
 }

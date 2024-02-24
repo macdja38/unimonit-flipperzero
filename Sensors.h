@@ -22,9 +22,12 @@
 
 //Маски бит для определения типов возвращаемых значений
 #define UT_TEMPERATURE 0b00000001
-#define UT_HUMIDITY 0b00000010
-#define UT_PRESSURE 0b00000100
-#define UT_CO2 0b00001000
+#define UT_HUMIDITY    0b00000010
+#define UT_PRESSURE    0b00000100
+#define UT_CO2         0b00001000
+#define UT_VOC         0b00010000
+#define UT_PM          0b00100000
+
 
 //Статусы опроса датчика
 typedef enum {
@@ -33,6 +36,7 @@ typedef enum {
     UT_DATA_TYPE_TEMP_PRESS = UT_TEMPERATURE | UT_PRESSURE,
     UT_DATA_TYPE_TEMP_HUM_PRESS = UT_TEMPERATURE | UT_HUMIDITY | UT_PRESSURE,
     UT_DATA_TYPE_TEMP_HUM_CO2 = UT_TEMPERATURE | UT_HUMIDITY | UT_CO2,
+    UT_DATA_TYPE_PM = UT_PM
 } SensorDataType;
 
 //Типы возвращаемых данных
@@ -125,6 +129,19 @@ typedef struct Sensor {
     float pressure;
     // Концентрация CO2
     float co2;
+
+    // Particulate Concentrations & Counts
+    float mc_1p0;
+    float mc_2p5;
+    float mc_4p0;
+    float mc_10p0;
+    float nc_0p5;
+    float nc_1p0;
+    float nc_2p5;
+    float nc_4p0;
+    float nc_10p0;
+    float typical_particle_size;
+
     //Тип датчика
     const SensorType* type;
     //Статус последнего опроса датчика
@@ -335,4 +352,5 @@ const GPIO*
 #include "./sensors/MAX6675.h"
 #include "./sensors/SCD30.h"
 #include "./sensors/SCD40.h"
+#include "./sensors/SPS30.h"
 #endif

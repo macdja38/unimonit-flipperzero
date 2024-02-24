@@ -24,6 +24,9 @@ Application for reading temperature, humidity and pressure sensors like a DHT11/
 - DS1822
 - MAX31855
 - MAX6675
+- SCD30
+- SCD40
+- SPS30
 
 ## Need help? Discussions?
 Join the discussion, ask a question or just send a photo of the flipper with sensors to [Discord](https://discord.com/channels/740930220399525928/1056727938747351060). [Invite link](https://discord.com/invite/flipper)
