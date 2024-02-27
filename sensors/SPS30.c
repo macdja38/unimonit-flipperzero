@@ -215,18 +215,6 @@ static bool readMeasurement(Sensor* sensor) {
         return false; // Sensor did not ACK
     }
 
-
-    float mc_1p0 = 0;
-    float mc_2p5 = 0;
-    float mc_4p0 = 0;
-    float mc_10p0 = 0;
-    float nc_0p5 = 0;
-    float nc_1p0 = 0;
-    float nc_2p5 = 0;
-    float nc_4p0 = 0;
-    float nc_10p0 = 0;
-    float typical_particle_size = 0;
-
     furi_delay_ms(3);
 
     static const uint8_t respSize = 60;
@@ -238,65 +226,30 @@ static bool readMeasurement(Sensor* sensor) {
         return false;
     }
 
-/*//    #define LOAD_FLOAT_AND_UPDATE_SENSOR(bytes, sensorField, logMessage) \
-//        do { \
-//            float tempValue; \
-//            if(loadFloat(bytes, &tempValue)) { \
-//                sensor->sensorField = tempValue; \
-//            } else { \
-//                FURI_LOG_E(APP_NAME, logMessage); \
-//                error = true; \
-//            } \
-//            bytes += 6; \
-//        } while(0)
-//
-//    // Usage example:
-//    LOAD_FLOAT_AND_UPDATE_SENSOR(bytes, mc_1p0, "Error while parsing MC 1.0");
-//    LOAD_FLOAT_AND_UPDATE_SENSOR(bytes, mc_2p5, "Error while parsing MC 2.5");
-//    LOAD_FLOAT_AND_UPDATE_SENSOR(bytes, mc_4p0, "Error while parsing MC 4.0");*/
-
     bool error = false;
-    if(loadFloat(bytes, &mc_1p0)) {
-        sensor->mc_1p0 = mc_1p0;
-    }
-    else {
-        FURI_LOG_E(APP_NAME, "Error while parsing MC 1.0");
-        error = true;
-    }
+    #define LOAD_FLOAT_AND_UPDATE_SENSOR(bytes, sensorField, logMessage) \
+        do { \
+            float tempValue; \
+            if(loadFloat(bytes, &tempValue)) { \
+                sensor->sensorField = tempValue; \
+            } else { \
+                FURI_LOG_E(APP_NAME, logMessage); \
+                error = true; \
+            } \
+            bytes += 6; \
+        } while(0)
 
-    bytes += 6;
-    if(loadFloat(bytes, &mc_2p5)) {
-       sensor->mc_2p5 = mc_2p5;
-    }
-    else {
-       FURI_LOG_E(APP_NAME, "Error while parsing MC 2.5");
-       error = true;
-    }
-
-    bytes += 6;
-    if(loadFloat(bytes, &mc_4p0)) {
-        sensor->mc_4p0 = mc_4p0;
-    }
-    else {
-        FURI_LOG_E(APP_NAME, "Error while parsing MC 4");
-        error = true;
-    }
-
-    bytes += 6;
-    if(loadFloat(bytes, &mc_10p0)) {
-        sensor->mc_10p0 = mc_10p0;
-    }
-    else {
-        FURI_LOG_E(APP_NAME, "Error while parsing MC 10");
-        error = true;
-    }
-    // TODO: Fill these with real data
-    sensor->nc_0p5 = nc_0p5;
-    sensor->nc_1p0 = nc_1p0;
-    sensor->nc_2p5 = nc_2p5;
-    sensor->nc_4p0 = nc_4p0;
-    sensor->nc_10p0 = nc_10p0;
-    sensor->typical_particle_size = typical_particle_size;
+    // This order must be maintained as each macro internally increments the bytes counter
+    LOAD_FLOAT_AND_UPDATE_SENSOR(bytes, mc_1p0, "Error while parsing MC 1.0");
+    LOAD_FLOAT_AND_UPDATE_SENSOR(bytes, mc_2p5, "Error while parsing MC 2.5");
+    LOAD_FLOAT_AND_UPDATE_SENSOR(bytes, mc_4p0, "Error while parsing MC 4.0");
+    LOAD_FLOAT_AND_UPDATE_SENSOR(bytes, mc_10p0, "Error while parsing MC 10.0");
+    LOAD_FLOAT_AND_UPDATE_SENSOR(bytes, nc_0p5, "Error while parsing NC 0.5");
+    LOAD_FLOAT_AND_UPDATE_SENSOR(bytes, nc_1p0, "Error while parsing NC 1.0");
+    LOAD_FLOAT_AND_UPDATE_SENSOR(bytes, nc_2p5, "Error while parsing NC 2.5");
+    LOAD_FLOAT_AND_UPDATE_SENSOR(bytes, nc_4p0, "Error while parsing NC 4.0");
+    LOAD_FLOAT_AND_UPDATE_SENSOR(bytes, nc_10p0, "Error while parsing NC 10.0");
+    LOAD_FLOAT_AND_UPDATE_SENSOR(bytes, typical_particle_size, "Error while parsing typical_particle_size");
 
     return !error;
 }
