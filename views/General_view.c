@@ -204,8 +204,15 @@ static void _draw_pm(Canvas* canvas, Color color, float concentration, const Ico
 
     //Целая часть
     if(concentration_int > 999) {
-        snprintf(app->buff, BUFF_SIZE, "MAX  ");
+        snprintf(app->buff, BUFF_SIZE, "MAX");
         canvas_set_font(canvas, FontPrimary);
+        canvas_draw_str_aligned(
+            canvas,
+            x + width - 6,
+            y + 10,
+            AlignRight,
+            AlignCenter,
+            app->buff);
     }
     else {
         bool display_decimal = concentration_int < 100;
@@ -230,7 +237,6 @@ static void _draw_pm(Canvas* canvas, Color color, float concentration, const Ico
             snprintf(app->buff, BUFF_SIZE, ".%d", concentration_dec);
             canvas_set_font(canvas, FontPrimary);
             canvas_draw_str_aligned(canvas, x + width - 3, y + 10 + 3, AlignRight, AlignCenter, app->buff);
-            // canvas_draw_str(canvas, x + 27 + int_len / 2 + 2, y + 10 + 7, app->buff);
         }
     }
 }
