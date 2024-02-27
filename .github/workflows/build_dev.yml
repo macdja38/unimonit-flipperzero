@@ -10,7 +10,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
         
-      - name: Build
-        uses: oleksiikutuzov/flipperzero-ufbt-action@v1
+      - name: Build with ufbt
+        uses: flipperdevices/flipperzero-ufbt-action@v0.1
         with:
-          channel: dev
+          sdk-channel: dev
