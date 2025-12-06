@@ -106,7 +106,6 @@ typedef struct {
     Popup* popup;
     //Буффер для различного текста
     char* buff;
-    Canvas* canvas;
 } Unitemp;
 
 /* Объявление прототипов функций */

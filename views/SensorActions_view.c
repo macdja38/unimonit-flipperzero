@@ -26,12 +26,6 @@ static VariableItemList* variable_item_list;
 //Текущий датчик
 static Sensor* current_sensor;
 
-typedef enum carousel_info {
-    CAROUSEL_VALUES, //Отображение значений датчиков
-    CAROUSEL_INFO, //Отображение информации о датчике
-} carousel_info;
-extern carousel_info carousel_info_selector;
-
 #define VIEW_ID UnitempViewSensorActions
 
 /**
@@ -59,7 +53,7 @@ static void _enter_callback(void* context, uint32_t index) {
 
     switch(index) {
     case 0:
-        carousel_info_selector = CAROUSEL_INFO;
+        unitemp_General_set_carousel_info(CAROUSEL_INFO);
         unitemp_General_switch();
         return;
     case 1:

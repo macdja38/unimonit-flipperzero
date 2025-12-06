@@ -44,8 +44,6 @@ VariableItem* temp_offset_item;
 //Буффер для текста смещения
 static char* offset_buff;
 
-extern uint8_t generalview_sensor_index;
-
 #define VIEW_ID UnitempViewSensorEdit
 
 bool _onewire_id_exist(uint8_t* id) {
@@ -170,7 +168,7 @@ static void _enter_callback(void* context, uint32_t index) {
         unitemp_sensors_save();
         unitemp_sensors_reload();
 
-        generalview_sensor_index = unitemp_sensors_getActiveCount() - 1;
+        unitemp_General_set_sensor_index(unitemp_sensors_getActiveCount() - 1);
         unitemp_General_switch();
     }
 

@@ -181,6 +181,24 @@ bool unitemp_loadSettings(void) {
 }
 
 /**
+ * @brief Callback для обработки навигации назад на верхнем уровне
+ */
+static bool unitemp_navigation_callback(void* context) {
+    UNUSED(context);
+    // Return VIEW_NONE to signal the ViewDispatcher to stop
+    return false;
+}
+
+/**
+ * @brief Callback для обработки пользовательских событий
+ */
+static bool unitemp_custom_event_callback(void* context, uint32_t event) {
+    UNUSED(context);
+    UNUSED(event);
+    return false;
+}
+
+/**
  * @brief Выделение места под переменные плагина
  * 
  * @return true Если всё прошло успешно
@@ -189,7 +207,6 @@ bool unitemp_loadSettings(void) {
 static bool unitemp_alloc(void) {
     //Выделение памяти под данные приложения
     app = malloc(sizeof(Unitemp));
-    app->canvas = NULL;
     //Разрешение работы приложения
     app->processing = true;
 
@@ -207,6 +224,11 @@ static bool unitemp_alloc(void) {
     app->gui = furi_record_open(RECORD_GUI);
     //Диспетчер окон
     app->view_dispatcher = view_dispatcher_alloc();
+    
+    // Set navigation callback to handle back button at top level
+    view_dispatcher_set_event_callback_context(app->view_dispatcher, app);
+    view_dispatcher_set_navigation_event_callback(app->view_dispatcher, unitemp_navigation_callback);
+    view_dispatcher_set_custom_event_callback(app->view_dispatcher, unitemp_custom_event_callback);
 
     app->sensors = NULL;
 

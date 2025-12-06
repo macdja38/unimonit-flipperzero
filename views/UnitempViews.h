@@ -46,9 +46,20 @@ typedef enum UnitempViews {
 void unitemp_popup(const Icon* icon, char* header, char* message, uint32_t prev_view_id);
 
 /* Общий вид на датчики */
+// Carousel info enum for external use
+typedef enum {
+    CAROUSEL_VALUES, //Отображение значений датчиков
+    CAROUSEL_INFO, //Отображение информации о датчике
+} carousel_info;
+
 void unitemp_General_alloc(void);
 void unitemp_General_switch(void);
 void unitemp_General_free(void);
+
+// Helper functions to interact with General view model
+void unitemp_General_set_carousel_info(carousel_info info);
+void unitemp_General_set_sensor_index(uint8_t index);
+uint8_t unitemp_General_get_sensor_index(void);
 
 /* Главное меню */
 void unitemp_MainMenu_alloc(void);
