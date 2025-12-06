@@ -17,6 +17,7 @@ Application for reading temperature, humidity and pressure sensors like a DHT11/
 - BMP280
 - BME280
 - BME680
+- BME688
 - HTU21D(F)
 - HDC1080
 - DS18B20

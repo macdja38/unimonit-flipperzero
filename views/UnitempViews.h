@@ -31,8 +31,8 @@ typedef enum UnitempViews {
     UnitempViewSensorActions,
     UnitempViewWidget,
     UnitempViewPopup,
-
-    UnitempViewsCount
+    UnitempViewsCount,
+    UnitempViewSensorSpecificActions
 } UnitempViews;
 
 /**

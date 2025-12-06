@@ -11,4 +11,5 @@ bool unitemp_SPS30_init(Sensor* sensor);
 bool unitemp_SPS30_deinit(Sensor* sensor);
 UnitempStatus unitemp_SPS30_update(Sensor* sensor);
 bool unitemp_SPS30_free(Sensor* sensor);
+bool unitemp_SPS30_display_actions(Sensor* sensor);
 #endif

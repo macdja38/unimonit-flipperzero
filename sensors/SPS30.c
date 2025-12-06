@@ -2,6 +2,7 @@
 #include "../interfaces/I2CSensor.h"
 #include "../interfaces/endianness.h"
 #include "furi_hal.h"
+#include <machine/endian.h>
 //#include <3rdparty/everest/include/everest/kremlin/c_endianness.h>
 
 typedef union {
@@ -28,7 +29,9 @@ const SensorType SPS30 = {
     .mem_releaser = unitemp_SPS30_free,
     .initializer = unitemp_SPS30_init,
     .deinitializer = unitemp_SPS30_deinit,
-    .updater = unitemp_SPS30_update};
+    .updater = unitemp_SPS30_update,
+    .displayActions = unitemp_SPS30_display_actions
+};
 
 #define SPS30_ID 0x69
 
@@ -129,6 +132,11 @@ static bool sendCommandWithCRC(Sensor* sensor, uint16_t command, uint16_t argume
     *pointer = computeCRC8(argPos, pointer - argPos);
 
     I2CSensor* i2c_sensor = (I2CSensor*)sensor->instance;
+    FURI_LOG_I(APP_NAME, "Command size %d", cmdSize);
+    // loop through bytes array printing each byte as a number.
+    for (int i = 0; i < cmdSize; i++) {
+        FURI_LOG_I(APP_NAME, "Byte %d: %x", i, bytes[i]);
+    }
     return unitemp_i2c_writeArray(i2c_sensor, cmdSize, bytes);
 }
 
@@ -155,7 +163,31 @@ static uint16_t readRegister(Sensor* sensor, uint16_t registerAddress) {
     I2CSensor* i2c_sensor = (I2CSensor*)sensor->instance;
     if(!unitemp_i2c_readArray(i2c_sensor, regSize, bytes))
         return 0;
+    FURI_LOG_D(APP_NAME, "Read Register size %d", regSize);
+    // loop through bytes array printing each byte as a number.
+    for (int i = 0; i < regSize; i++) {
+        FURI_LOG_D(APP_NAME, "Byte %d: %x", i, bytes[i]);
+    }
 
+    FURI_LOG_D(APP_NAME, "Load Big Endian: %x", load16_be(bytes));
+    FURI_LOG_D(APP_NAME, "Load Little Endian: %x", load16_le(bytes));
+    FURI_LOG_D(APP_NAME, "Load System Endian: %x", load16(bytes));
+    // read from macro value BIG_ENDIAN
+    #if BIG_ENDIAN == BYTE_ORDER
+    FURI_LOG_D(APP_NAME, "Big Endian");
+    #endif
+    #if LITTLE_ENDIAN == BYTE_ORDER
+    FURI_LOG_D(APP_NAME, "Little Endian");
+    #endif
+    FURI_LOG_D(APP_NAME, "Byte Order: %x", BYTE_ORDER);
+    FURI_LOG_D(APP_NAME, "Big Endian: %x", BIG_ENDIAN);
+    FURI_LOG_D(APP_NAME, "Little Endian: %x", LITTLE_ENDIAN);
+    FURI_LOG_D(APP_NAME, "System is running in %s endian mode", BIG_ENDIAN == BYTE_ORDER ? "big" : "little");
+//    #pragma message BIG_ENDIAN
+//    #pragma message "Little" LITTLE_ENDIAN
+//    #pragma message "Order" BYTE_ORDER
+//    FURI_LOG_I(APP_NAME, "System is running in %s endian mode", BIG_ENDIAN == BYTE_ORDER ? "big" : "little");
+//    FURI_LOG_I(APP_NAME, "%d == %d", BIG_ENDIAN, BYTE_ORDER);
     return load16_be(bytes);
 }
 
@@ -168,9 +200,7 @@ static bool loadWord(uint8_t* buff, uint16_t* val) {
     return true;
 }
 
-static bool getSettingValue(Sensor* sensor, uint16_t registerAddress, uint16_t* val) {
-    static const uint8_t respSize = 3;
-
+static bool getSettingValue(Sensor* sensor, uint16_t registerAddress, uint16_t* val, uint8_t respSize) {
     if(!sendCommand(sensor, registerAddress))
         return false; // Sensor did not ACK
 
@@ -180,6 +210,11 @@ static bool getSettingValue(Sensor* sensor, uint16_t registerAddress, uint16_t* 
     I2CSensor* i2c_sensor = (I2CSensor*)sensor->instance;
     if(!unitemp_i2c_readArray(i2c_sensor, respSize, bytes))
         return false;
+
+    // loop through bytes array printing each byte as a number.
+    for (int i = 0; i < respSize; i++) {
+        FURI_LOG_D(APP_NAME, "Byte %d: %d", i, bytes[i]);
+    }
 
     return loadWord(bytes, val);
 }
@@ -207,6 +242,7 @@ static bool loadFloat(uint8_t* buff, float* val) {
 static bool readMeasurement(Sensor* sensor) {
     // Verify we have data from the sensor
     if(!dataAvailable(sensor)) {
+        FURI_LOG_I(APP_NAME, "No data available");
         return false;
     }
 
@@ -259,7 +295,7 @@ static void reset(Sensor* sensor) {
 }
 
 static bool getFirmwareVersion(Sensor* sensor, uint16_t* val) {
-    return getSettingValue(sensor, COMMAND_READ_FW_VER, val);
+    return getSettingValue(sensor, COMMAND_READ_FW_VER, val, 7);
 }
 
 // Stop continuous measurement
@@ -272,17 +308,37 @@ static bool stopMeasurement(Sensor* sensor) {
 static bool startMeasurement(Sensor* sensor) {
     uint16_t test = 0;
     if (getFirmwareVersion(sensor, &test)) {
-        sensor->mc_2p5 = 15;
+        sensor->mc_2p5 = test;
     } else {
         sensor->mc_2p5 = 16;
     }
-    if(!sendCommandWithCRC(sensor, COMMAND_CONTINUOUS_MEASUREMENT, 0x0300))
+    if(!sendCommandWithCRC(sensor, COMMAND_CONTINUOUS_MEASUREMENT, 0x0300)) {
+        FURI_LOG_I(APP_NAME, "SPS30 Start Measurements Failure");
         return false;
-    // TODO: check if this worked?
+    }
+    FURI_LOG_I(APP_NAME, "SPS30 Start Measurements Success");
     return true;
 }
 
 // Returns true when data is available
 static bool dataAvailable(Sensor* sensor) {
     return 1 == readRegister(sensor, COMMAND_GET_DATA_READY);
+}
+
+bool unitemp_SPS30_display_actions(Sensor* sensor) {
+    uint16_t firmwareVersion;
+    getFirmwareVersion(sensor, &firmwareVersion);
+
+    int firmwareVersionMajor = firmwareVersion >> 8;
+    int firmwareVersionMinor = firmwareVersion & 0xFF;
+
+    FURI_LOG_I(APP_NAME, "SPS30 Firmware version: %d.%d", firmwareVersionMajor, firmwareVersionMinor);
+
+    if(!sendCommandWithCRC(sensor, COMMAND_CONTINUOUS_MEASUREMENT, 0x0300)) {
+        FURI_LOG_E(APP_NAME, "Failed to start measurement in action");
+        return false;
+    }
+
+    UNUSED(sensor);
+    return false;
 }

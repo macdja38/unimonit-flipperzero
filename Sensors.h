@@ -35,6 +35,7 @@ typedef enum {
     UT_DATA_TYPE_TEMP_HUM = UT_TEMPERATURE | UT_HUMIDITY,
     UT_DATA_TYPE_TEMP_PRESS = UT_TEMPERATURE | UT_PRESSURE,
     UT_DATA_TYPE_TEMP_HUM_PRESS = UT_TEMPERATURE | UT_HUMIDITY | UT_PRESSURE,
+    UT_DATA_TYPE_TEMP_HUM_PRESS_VOC = UT_TEMPERATURE | UT_HUMIDITY | UT_PRESSURE | UT_VOC,
     UT_DATA_TYPE_TEMP_HUM_CO2 = UT_TEMPERATURE | UT_HUMIDITY | UT_CO2,
     UT_DATA_TYPE_PM = UT_PM
 } SensorDataType;
@@ -81,6 +82,8 @@ typedef bool(SensorDeinitializer)(Sensor* sensor);
  */
 typedef UnitempStatus(SensorUpdater)(Sensor* sensor);
 
+typedef bool(SensorActions)(Sensor* sensor);
+
 //Типы подключения датчиков
 typedef struct Interface {
     //Имя интерфейса
@@ -115,6 +118,7 @@ typedef struct {
     SensorDeinitializer* deinitializer;
     //Функция обновления значения датчка
     SensorUpdater* updater;
+    SensorActions* displayActions;
 } SensorType;
 
 //Датчик
@@ -243,7 +247,7 @@ void unitemp_sensors_free(void);
 /**
  * @brief Обновить данные всех датчиков
  */
-void unitemp_sensors_updateValues(void);
+void unitemp_sensors_updateValues(void* context);
 
 /**
  * @brief Получить количество загруженных датчиков
@@ -339,9 +343,10 @@ const GPIO*
 //DS18x2x
 #include "./interfaces/OneWireSensor.h"
 #include "./sensors/LM75.h"
-//BMP280, BME280, BME680
+//BMP280, BME280, BME680, BME688
 #include "./sensors/BMx280.h"
 #include "./sensors/BME680.h"
+#include "./sensors/BME688.h"
 #include "./sensors/AM2320.h"
 #include "./sensors/DHT20.h"
 #include "./sensors/SHT30.h"

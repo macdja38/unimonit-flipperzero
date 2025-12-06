@@ -79,8 +79,8 @@ const Interface SPI = {
 static const SensorType* sensorTypes[] = {&DHT11,  &DHT12_SW,  &DHT20,      &DHT21,    &DHT22,
                                           &Dallas, &AM2320_SW, &AM2320_I2C, &HTU21x,   &AHT10,
                                           &SHT30,  &GXHT30,    &LM75,       &HDC1080,  &BMP180,
-                                          &BMP280, &BME280,    &BME680,     &MAX31855, &MAX6675,
-                                          &SCD30,  &SCD40,     &SPS30};
+                                          &BMP280, &BME280,    &BME680,     &BME688,   &MAX31855,
+                                          &MAX6675,&SCD30,     &SCD40,      &SPS30};
 
 const SensorType* unitemp_sensors_getTypeFromInt(uint8_t index) {
     if(index > SENSOR_TYPES_COUNT) return NULL;
@@ -511,6 +511,17 @@ Sensor* unitemp_sensor_alloc(char* name, const SensorType* type, char* args) {
     sensor->temp = -128.0f;
     sensor->hum = -128.0f;
     sensor->pressure = -128.0f;
+    sensor->co2 = -128.0f;
+    sensor->mc_1p0 = 9999;
+    sensor->mc_2p5 = 9999;
+    sensor->mc_4p0 = 9999;
+    sensor->mc_10p0 = 9999;
+    sensor->nc_0p5 = 9999;
+    sensor->nc_1p0 = 9999;
+    sensor->nc_2p5 = 9999;
+    sensor->nc_4p0 = 9999;
+    sensor->nc_10p0 = 9999;
+    sensor->typical_particle_size = 9999;
     sensor->temp_offset = 0;
     //Выделение памяти под инстанс датчика в зависимости от его интерфейса
     status = sensor->type->interface->allocator(sensor, args);
@@ -569,6 +580,31 @@ bool unitemp_sensors_init(void) {
         if(furi_hal_power_is_otg_enabled() != true) {
             furi_hal_power_enable_otg();
             UNITEMP_DEBUG("OTG enabled");
+            FURI_LOG_D(
+                APP_NAME,
+                "FURI POWER ENABLE STATUS: %d",
+                furi_hal_power_is_otg_enabled() ? 1 : 0
+            );
+            FURI_LOG_D(
+                APP_NAME,
+                "Voltage = %3f / 5v",
+                (double)furi_hal_power_get_usb_voltage());
+            if (furi_hal_power_check_otg_fault()) {
+                FURI_LOG_E(
+                    APP_NAME,
+                    "Error power otg enable. BQ2589 check otg fault = %d",
+                    furi_hal_power_check_otg_fault() ? 1 : 0);
+                FURI_LOG_E(
+                    APP_NAME,
+                    "Error power otg enable. BQ2589 check otg fault = %d",
+                    furi_hal_power_check_otg_fault());
+            }
+            if(furi_hal_power_get_usb_voltage() < 4.5f) {
+                FURI_LOG_E(
+                    APP_NAME,
+                    "Error power otg out of range. BQ2589 check otg fault = %d",
+                    furi_hal_power_check_otg_fault() ? 1 : 0);
+            }
         }
         if(!(*app->sensors[i]->type->initializer)(app->sensors[i])) {
             FURI_LOG_E(
@@ -605,6 +641,7 @@ bool unitemp_sensors_deInit(void) {
 }
 
 UnitempStatus unitemp_sensor_updateData(Sensor* sensor) {
+    FURI_LOG_I(APP_NAME, "Updating sensor %s", sensor->name);
     if(sensor == NULL) return UT_SENSORSTATUS_ERROR;
 
     //Проверка на допустимость опроса датчика
@@ -645,7 +682,9 @@ UnitempStatus unitemp_sensor_updateData(Sensor* sensor) {
     return sensor->status;
 }
 
-void unitemp_sensors_updateValues(void) {
+void unitemp_sensors_updateValues(void* context) {
+    furi_assert(context);
+    FURI_LOG_I(APP_NAME, "Updating %d", unitemp_sensors_getCount());
     for(uint8_t i = 0; i < unitemp_sensors_getCount(); i++) {
         unitemp_sensor_updateData(unitemp_sensor_getActive(i));
     }

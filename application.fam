@@ -1,3 +1,5 @@
+# For details & more options, see documentation/AppManifests.md in firmware repo
+
 App(
     appid="unimonit",
     name="Environmental sensors reader",

@@ -40,7 +40,7 @@
 //Имя приложения
 #define APP_NAME "Unitemp"
 //Версия приложения
-#define UNITEMP_APP_VER "1.4-store"
+#define UNIMONIT_APP_VER "1.4"
 //Путь хранения файлов плагина
 #define APP_PATH_FOLDER "/ext/unitemp"
 //Имя файла с настройками
@@ -106,6 +106,7 @@ typedef struct {
     Popup* popup;
     //Буффер для различного текста
     char* buff;
+    Canvas* canvas;
 } Unitemp;
 
 /* Объявление прототипов функций */

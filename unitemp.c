@@ -22,6 +22,8 @@
 
 #include <furi_hal_power.h>
 
+#define POLL_SENSOR_RATE_MS (100)
+
 /* Переменные */
 //Данные приложения
 Unitemp* app;
@@ -187,6 +189,7 @@ bool unitemp_loadSettings(void) {
 static bool unitemp_alloc(void) {
     //Выделение памяти под данные приложения
     app = malloc(sizeof(Unitemp));
+    app->canvas = NULL;
     //Разрешение работы приложения
     app->processing = true;
 
@@ -224,6 +227,9 @@ static bool unitemp_alloc(void) {
     view_dispatcher_add_view(app->view_dispatcher, UnitempViewPopup, popup_get_view(app->popup));
 
     view_dispatcher_attach_to_gui(app->view_dispatcher, app->gui, ViewDispatcherTypeFullscreen);
+
+    furi_event_loop_timer_alloc(
+        view_dispatcher_get_event_loop(app->view_dispatcher), unitemp_sensors_updateValues, FuriEventLoopTimerTypePeriodic, app);
 
     return true;
 }
@@ -292,10 +298,7 @@ int32_t unitemp_app() {
 
     unitemp_General_switch();
 
-    while(app->processing) {
-        if(app->sensors_ready) unitemp_sensors_updateValues();
-        furi_delay_ms(100);
-    }
+    view_dispatcher_run(app->view_dispatcher);
 
     //Деинициализация датчиков
     unitemp_sensors_deInit();

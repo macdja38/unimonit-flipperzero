@@ -411,6 +411,7 @@ static void _draw_carousel_values(Canvas* canvas) {
             ColorWhite);
         _draw_pressure(canvas, unitemp_sensor_getActive(generalview_sensor_index));
         break;
+    case UT_DATA_TYPE_TEMP_HUM_PRESS_VOC:
     case UT_DATA_TYPE_TEMP_HUM_PRESS:
         _draw_temperature(
             canvas,
@@ -569,6 +570,8 @@ static void _draw_view_sensorsCarousel(Canvas* canvas) {
 
 static void _draw_callback(Canvas* canvas, void* _model) {
     UNUSED(_model);
+    FURI_LOG_I(APP_NAME, "DRAW CALLED ON GENERAL VIEW");
+    app->canvas = canvas;
 
     app->sensors_ready = true;
 
@@ -588,6 +591,9 @@ static void _draw_callback(Canvas* canvas, void* _model) {
 }
 
 static bool _input_callback(InputEvent* event, void* context) {
+    FURI_LOG_I(APP_NAME, "Keyboard input event");
+    FURI_LOG_I(APP_NAME, "Key: %d", event->key);
+    FURI_LOG_I(APP_NAME, "Type: %d", event->type);
     UNUSED(context);
 
     //Обработка короткого нажатия "ок"
@@ -643,6 +649,7 @@ static bool _input_callback(InputEvent* event, void* context) {
                 generalview_sensor_index = 0;
                 if(carousel_info_selector == CAROUSEL_VALUES) current_view = G_LIST_VIEW;
             }
+            FURI_LOG_I(APP_NAME, "Sensor view index: %d", generalview_sensor_index);
 
             return true;
         }
@@ -707,13 +714,30 @@ static bool _input_callback(InputEvent* event, void* context) {
     return true;
 }
 
+static void _tick_callback(void* context) {
+    UNUSED(context);
+    if (app->sensors_ready) {
+        unitemp_sensors_updateValues(context);
+    }
+    if (app->canvas != NULL) {
+        _draw_callback(app->canvas, NULL);
+    }
+    Gui* gui = furi_record_open(RECORD_GUI);
+    gui_direct_draw_acquire(gui);
+    gui_direct_draw_release(gui);
+}
+
 void unitemp_General_alloc(void) {
     view = view_alloc();
     view_set_context(view, app);
     view_set_draw_callback(view, _draw_callback);
+    FURI_LOG_I(APP_NAME, "SET INPUT CALLBACK");
     view_set_input_callback(view, _input_callback);
 
     view_dispatcher_add_view(app->view_dispatcher, UnitempViewGeneral, view);
+
+    // UNUSED(_tick_callback);
+    view_dispatcher_set_tick_event_callback(app->view_dispatcher, _tick_callback, 250);
 }
 
 void unitemp_General_switch(void) {

@@ -56,4 +56,6 @@ UnitempStatus unitemp_SCD30_update(Sensor* sensor);
  */
 bool unitemp_SCD30_free(Sensor* sensor);
 
+bool unitemp_SCD30_display_actions(Sensor* sensor);
+
 #endif

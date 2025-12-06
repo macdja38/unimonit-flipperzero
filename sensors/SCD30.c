@@ -48,7 +48,9 @@ const SensorType SCD30 = {
     .mem_releaser = unitemp_SCD30_free,
     .initializer = unitemp_SCD30_init,
     .deinitializer = unitemp_SCD30_deinit,
-    .updater = unitemp_SCD30_update};
+    .updater = unitemp_SCD30_update,
+    .displayActions = unitemp_SCD30_display_actions
+};
 
 #define SCD30_ID 0x61
 
@@ -397,4 +399,23 @@ static uint16_t getMeasurementInterval(Sensor* sensor) {
 // Returns true when data is available
 static bool dataAvailable(Sensor* sensor) {
     return 1 == readRegister(sensor, COMMAND_GET_DATA_READY);
+}
+
+bool unitemp_SCD30_display_actions(Sensor* sensor) {
+    uint16_t firmwareVersion;
+    if(getFirmwareVersion(sensor, &firmwareVersion)) {
+
+        int firmwareVersionMajor = firmwareVersion >> 8;
+        int firmwareVersionMinor = firmwareVersion & 0xFF;
+
+        FURI_LOG_I(APP_NAME, "SCD30 Firmware version: %d.%d", firmwareVersionMajor, firmwareVersionMinor);
+    }
+
+    if(!setForcedRecalibrationFactor(sensor, 400)) {
+        FURI_LOG_E(APP_NAME, "SCD30 Failed to set forced recalibration value");
+        return false;
+    }
+    FURI_LOG_E(APP_NAME, "SCD30 Recalibrated to 400ppm");
+
+    return true;
 }

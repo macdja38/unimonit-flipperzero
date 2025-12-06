@@ -5,6 +5,8 @@
 [![Build dev](https://github.com/quen0n/unitemp-flipperzero/actions/workflows/build_dev.yml/badge.svg?branch=dev)](https://github.com/quen0n/unitemp-flipperzero/actions/workflows/build_dev.yml)  
 [Flipper Zero](https://flipperzero.one/) application for reading temperature, humidity, pressure, co2 and particulate matter sensors like a DHT11/22, DS18B20, BMP280, HTU21 and more. 
 A fork of the popular Unitemp project. They probably can't be installed at the same time.
+Good to know is that this project turns the 5v pin on the flipper zero on. In low power mode in the future it may turn it on and off on an interval.
+
 ## List of supported sensors
 ![image](https://user-images.githubusercontent.com/10090793/215605424-54b1c08c-e41b-4fb4-b966-dd959507200b.png)
 

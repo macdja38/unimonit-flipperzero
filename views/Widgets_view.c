@@ -188,7 +188,7 @@ void unitemp_widget_about_switch(void) {
     widget_add_frame_element(app->widget, 0, 0, 128, 63, 7);
     widget_add_frame_element(app->widget, 0, 0, 128, 64, 7);
 
-    snprintf(app->buff, BUFF_SIZE, "#Unitemp %s#", UNITEMP_APP_VER);
+    snprintf(app->buff, BUFF_SIZE, "#Unimonit %s#", UNIMONIT_APP_VER);
     widget_add_text_box_element(
         app->widget, 0, 4, 128, 12, AlignCenter, AlignCenter, app->buff, false);
 
@@ -198,7 +198,7 @@ void unitemp_widget_about_switch(void) {
         16,
         121,
         44,
-        "Universal plugin for viewing the values of temperature\nsensors\n\e#Author: Quenon\ngithub.com/quen0n\n\e#Designer: Svaarich\ngithub.com/Svaarich\n\e#Issues & suggestions\ntiny.one/unitemp");
+        "Universal plugin for viewing the values of environmental\nsensors\n\e#Authors: Macdja38\ngithub.com/macdja38\n\e#Quenon\ngithub.com/quen0n\n\e#Designer: Svaarich\ngithub.com/Svaarich\n\e#Issues & suggestions\ntiny.one/unitemp");
 
     view_set_previous_callback(widget_get_view(app->widget), _help_exit_callback);
     view_dispatcher_switch_to_view(app->view_dispatcher, UnitempViewWidget);

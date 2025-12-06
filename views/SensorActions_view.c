@@ -42,6 +42,7 @@ extern carousel_info carousel_info_selector;
  */
 static uint32_t _exit_callback(void* context) {
     UNUSED(context);
+    FURI_LOG_I(APP_NAME, "SensorACTIONS exit");
 
     //Возврат предыдущий вид
     return UnitempViewGeneral;
@@ -54,6 +55,8 @@ static uint32_t _exit_callback(void* context) {
  */
 static void _enter_callback(void* context, uint32_t index) {
     UNUSED(context);
+    FURI_LOG_I(APP_NAME, "SensorACTIONS enter");
+
     switch(index) {
     case 0:
         carousel_info_selector = CAROUSEL_INFO;
@@ -66,15 +69,22 @@ static void _enter_callback(void* context, uint32_t index) {
         unitemp_widget_delete_switch(current_sensor);
         break;
     case 3:
-        unitemp_SensorsList_switch();
+        if(current_sensor->type->displayActions == NULL) {
+            FURI_LOG_E(APP_NAME, "Sensor does not have actions list");
+            return;
+        }
+        current_sensor->type->displayActions(current_sensor);
         break;
     case 4:
-        unitemp_Settings_switch();
+        unitemp_SensorsList_switch();
         break;
     case 5:
-        unitemp_widget_help_switch();
+        unitemp_Settings_switch();
         break;
     case 6:
+        unitemp_widget_help_switch();
+        break;
+    case 7:
         unitemp_widget_about_switch();
         break;
     }
@@ -91,6 +101,7 @@ void unitemp_SensorActions_alloc(void) {
     variable_item_list_add(variable_item_list, "Info", 1, NULL, NULL);
     variable_item_list_add(variable_item_list, "Edit", 1, NULL, NULL);
     variable_item_list_add(variable_item_list, "Delete", 1, NULL, NULL);
+    variable_item_list_add(variable_item_list, "Sensor Specific Commands", 1, NULL, NULL);
 
     variable_item_list_add(variable_item_list, "Add new sensor", 1, NULL, NULL);
     variable_item_list_add(variable_item_list, "Settings", 1, NULL, NULL);
