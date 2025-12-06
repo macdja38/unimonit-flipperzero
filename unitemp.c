@@ -207,6 +207,7 @@ static bool unitemp_custom_event_callback(void* context, uint32_t event) {
 static bool unitemp_alloc(void) {
     //Выделение памяти под данные приложения
     app = malloc(sizeof(Unitemp));
+    FURI_LOG_I(APP_NAME, "[ALLOC] App struct allocated at %p (size=%d)", app, sizeof(Unitemp));
     //Разрешение работы приложения
     app->processing = true;
 
@@ -233,6 +234,7 @@ static bool unitemp_alloc(void) {
     app->sensors = NULL;
 
     app->buff = malloc(BUFF_SIZE);
+    FURI_LOG_I(APP_NAME, "[ALLOC] App buff allocated at %p (size=%d)", app->buff, BUFF_SIZE);
 
     unitemp_General_alloc();
 
@@ -250,8 +252,7 @@ static bool unitemp_alloc(void) {
 
     view_dispatcher_attach_to_gui(app->view_dispatcher, app->gui, ViewDispatcherTypeFullscreen);
 
-    furi_event_loop_timer_alloc(
-        view_dispatcher_get_event_loop(app->view_dispatcher), unitemp_sensors_updateValues, FuriEventLoopTimerTypePeriodic, app);
+    // Note: Sensor updates are handled by the tick callback in General_view, not a separate timer
 
     return true;
 }
@@ -260,6 +261,7 @@ static bool unitemp_alloc(void) {
  * @brief Освыбождение памяти после работы приложения
  */
 static void unitemp_free(void) {
+    FURI_LOG_I(APP_NAME, "[LIFECYCLE] unitemp_free: Freeing UI components");
     popup_free(app->popup);
     //Удаление вида после обработки
     view_dispatcher_remove_view(app->view_dispatcher, UnitempViewPopup);
@@ -273,21 +275,28 @@ static void unitemp_free(void) {
     unitemp_MainMenu_free();
     unitemp_General_free();
 
+    FURI_LOG_I(APP_NAME, "[FREE] Freeing app buff at %p", app->buff);
     free(app->buff);
+
+    // Clear tick callback before freeing view dispatcher
+    FURI_LOG_I(APP_NAME, "[LIFECYCLE] Clearing tick event callback");
+    view_dispatcher_set_tick_event_callback(app->view_dispatcher, NULL, 0);
 
     view_dispatcher_free(app->view_dispatcher);
     furi_record_close(RECORD_GUI);
     //Очистка датчиков
     //Высвыбождение данных датчиков
+    FURI_LOG_I(APP_NAME, "[LIFECYCLE] Calling unitemp_sensors_free()");
     unitemp_sensors_free();
-    free(app->sensors);
 
     //Закрытие уведомлений
     furi_record_close(RECORD_NOTIFICATION);
     //Закрытие хранилища
     furi_record_close(RECORD_STORAGE);
     //Удаление в самую последнюю очередь
+    FURI_LOG_I(APP_NAME, "[FREE] Freeing app struct at %p", app);
     free(app);
+    FURI_LOG_I(APP_NAME, "[FREE] All app memory freed");
 }
 
 /**
@@ -296,6 +305,7 @@ static void unitemp_free(void) {
  * @return Код ошибки
  */
 int32_t unitemp_app() {
+    FURI_LOG_I(APP_NAME, "========== APP START ==========");
     //Выделение памяти под переменные
     //Выход если произошла ошибка
     if(unitemp_alloc() == false) {
@@ -314,21 +324,27 @@ int32_t unitemp_app() {
     }
     app->settings.lastOTGState = furi_hal_power_is_otg_enabled();
     //Загрузка датчиков из SD-карты
+    FURI_LOG_I(APP_NAME, "[LIFECYCLE] Loading sensors from SD card");
     unitemp_sensors_load();
     //Инициализация датчиков
+    FURI_LOG_I(APP_NAME, "[LIFECYCLE] Initializing sensors");
     unitemp_sensors_init();
 
     unitemp_General_switch();
 
     view_dispatcher_run(app->view_dispatcher);
 
+    FURI_LOG_I(APP_NAME, "[LIFECYCLE] App exiting, starting cleanup");
     //Деинициализация датчиков
+    FURI_LOG_I(APP_NAME, "[LIFECYCLE] Deinitializing sensors");
     unitemp_sensors_deInit();
     //Автоматическое управление подсветкой
     if(app->settings.infinityBacklight == true)
         notification_message(app->notifications, &sequence_display_backlight_enforce_auto);
     //Освобождение памяти
+    FURI_LOG_I(APP_NAME, "[LIFECYCLE] Calling unitemp_free()");
     unitemp_free();
+    FURI_LOG_I(APP_NAME, "========== APP EXIT ==========");
     //Выход
     return 0;
 }

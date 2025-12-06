@@ -89,6 +89,7 @@ bool unitemp_I2C_sensor_alloc(Sensor* sensor, char* args) {
         FURI_LOG_E(APP_NAME, "Sensor %s instance allocation error", sensor->name);
         return false;
     }
+    FURI_LOG_I(APP_NAME, "[ALLOC] I2CSensor instance allocated at %p for '%s' (size=%d)", instance, sensor->name, sizeof(I2CSensor));
     instance->i2c = &furi_hal_i2c_handle_external;
     sensor->instance = instance;
 
@@ -113,7 +114,9 @@ bool unitemp_I2C_sensor_alloc(Sensor* sensor, char* args) {
 }
 
 bool unitemp_I2C_sensor_free(Sensor* sensor) {
+    FURI_LOG_I(APP_NAME, "[FREE] I2C sensor '%s': calling sensor-specific releaser", sensor->name);
     bool status = sensor->type->mem_releaser(sensor);
+    FURI_LOG_I(APP_NAME, "[FREE] Freeing I2CSensor instance at %p for '%s'", sensor->instance, sensor->name);
     free(sensor->instance);
     if(--sensors_count == 0) {
         unitemp_gpio_unlock(unitemp_gpio_getFromInt(15));

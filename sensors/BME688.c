@@ -334,6 +334,7 @@ bool unitemp_BME688_alloc(Sensor* sensor, char* args) {
         FURI_LOG_E(APP_NAME, "Failed to allocation sensor %s instance", sensor->name);
         return false;
     }
+    FURI_LOG_I(APP_NAME, "[ALLOC] BME688_instance allocated at %p (size=%d)", bme688_instance, sizeof(BME688_instance));
 
     if(sensor->type == &BME688) bme688_instance->chip_id = BME688_ID;
 
@@ -431,6 +432,7 @@ UnitempStatus unitemp_BME688_update(Sensor* sensor) {
 
 bool unitemp_BME688_free(Sensor* sensor) {
     I2CSensor* i2c_sensor = (I2CSensor*)sensor->instance;
+    FURI_LOG_I(APP_NAME, "[FREE] Freeing BME688_instance at %p", i2c_sensor->sensorInstance);
     free(i2c_sensor->sensorInstance);
     return true;
 }

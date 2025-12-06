@@ -276,10 +276,12 @@ uint8_t unitemp_sensors_getActiveCount(void) {
 }
 
 void unitemp_sensors_add(Sensor* sensor) {
+    FURI_LOG_I(APP_NAME, "[ALLOC] Adding sensor %p to array (current count=%d)", sensor, unitemp_sensors_getCount());
     app->sensors =
         (Sensor**)realloc(app->sensors, (unitemp_sensors_getCount() + 1) * sizeof(Sensor*));
     app->sensors[unitemp_sensors_getCount()] = sensor;
     app->sensors_count++;
+    FURI_LOG_I(APP_NAME, "[ALLOC] Sensor added, new count=%d, array=%p", app->sensors_count, app->sensors);
 }
 
 bool unitemp_sensors_load(void) {
@@ -489,14 +491,16 @@ Sensor* unitemp_sensor_alloc(char* name, const SensorType* type, char* args) {
     Sensor* sensor = malloc(sizeof(Sensor));
     if(sensor == NULL) {
         FURI_LOG_E(APP_NAME, "Sensor %s allocation error", name);
-        return false;
+        return NULL; // Fix: Return NULL instead of false
     }
+    FURI_LOG_I(APP_NAME, "[ALLOC] Sensor struct allocated at %p for '%s'", sensor, name);
 
     //Выделение памяти под имя
     sensor->name = malloc(11);
     if(sensor->name == NULL) {
         FURI_LOG_E(APP_NAME, "Sensor %s name allocation error", name);
-        return false;
+        free(sensor); // Fix: Free sensor struct on error
+        return NULL;  // Fix: Return NULL instead of false
     }
     //Запись имени датчка
     strcpy(sensor->name, name);
@@ -529,9 +533,11 @@ Sensor* unitemp_sensor_alloc(char* name, const SensorType* type, char* args) {
     //Выход если датчик успешно развёрнут
     if(status) {
         UNITEMP_DEBUG("Sensor %s allocated", name);
+        FURI_LOG_I(APP_NAME, "[ALLOC] Sensor '%s' fully allocated at %p", name, sensor);
         return sensor;
     }
     //Выход с очисткой если память для датчика не была выделена
+    FURI_LOG_I(APP_NAME, "[FREE] Sensor allocation failed, freeing %p", sensor);
     free(sensor->name);
     free(sensor);
     FURI_LOG_E(APP_NAME, "Sensor %s(%s) allocation error", name, type->typename);
@@ -543,6 +549,7 @@ void unitemp_sensor_free(Sensor* sensor) {
         FURI_LOG_E(APP_NAME, "Null pointer sensor releasing");
         return;
     }
+    FURI_LOG_I(APP_NAME, "[FREE] Freeing sensor '%s' at %p", sensor->name ? sensor->name : "NULL", sensor);
     if(sensor->type == NULL) {
         FURI_LOG_E(APP_NAME, "Sensor type is null");
         return;
@@ -560,14 +567,23 @@ void unitemp_sensor_free(Sensor* sensor) {
     } else {
         FURI_LOG_E(APP_NAME, "Sensor %s memory is not released", sensor->name);
     }
+    FURI_LOG_I(APP_NAME, "[FREE] About to free sensor struct at %p", sensor);
     free(sensor->name);
+    free(sensor); // Fix: Free the sensor struct itself
 }
 
 void unitemp_sensors_free(void) {
+    FURI_LOG_I(APP_NAME, "[FREE] unitemp_sensors_free called, count=%d, array=%p", unitemp_sensors_getCount(), app->sensors);
     for(uint8_t i = 0; i < unitemp_sensors_getCount(); i++) {
+        FURI_LOG_I(APP_NAME, "[FREE] Freeing sensor [%d/%d] at %p", i+1, unitemp_sensors_getCount(), app->sensors[i]);
         unitemp_sensor_free(app->sensors[i]);
     }
     app->sensors_count = 0;
+    // Fix: Free the sensors array itself
+    FURI_LOG_I(APP_NAME, "[FREE] Freeing sensors array at %p", app->sensors);
+    free(app->sensors);
+    app->sensors = NULL;
+    FURI_LOG_I(APP_NAME, "[FREE] unitemp_sensors_free completed");
 }
 
 bool unitemp_sensors_init(void) {
