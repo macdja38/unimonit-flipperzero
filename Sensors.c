@@ -276,16 +276,18 @@ uint8_t unitemp_sensors_getActiveCount(void) {
 }
 
 void unitemp_sensors_add(Sensor* sensor) {
-    FURI_LOG_I(APP_NAME, "[ALLOC] Adding sensor %p to array (current count=%d)", sensor, unitemp_sensors_getCount());
+    void* old_array_ptr = (void*)app->sensors;
+    FURI_LOG_I(APP_NAME, "[ALLOC] Adding sensor %p to array (current count=%d, old array=%p)", sensor, unitemp_sensors_getCount(), old_array_ptr);
     app->sensors =
         (Sensor**)realloc(app->sensors, (unitemp_sensors_getCount() + 1) * sizeof(Sensor*));
     app->sensors[unitemp_sensors_getCount()] = sensor;
     app->sensors_count++;
-    FURI_LOG_I(APP_NAME, "[ALLOC] Sensor added, new count=%d, array=%p", app->sensors_count, app->sensors);
+    FURI_LOG_I(APP_NAME, "[ALLOC] Sensor added, new count=%d, old array=%p, new array=%p", app->sensors_count, old_array_ptr, app->sensors);
 }
 
 bool unitemp_sensors_load(void) {
     UNITEMP_DEBUG("Loading sensors...");
+    FURI_LOG_I(APP_NAME, "[LIFECYCLE] unitemp_sensors_load: app->sensors=%p, count=%d", app->sensors, app->sensors_count);
 
     //Выделение памяти на поток
     app->file_stream = file_stream_alloc(app->storage);
@@ -303,6 +305,7 @@ bool unitemp_sensors_load(void) {
             //Закрытие потока и освобождение памяти
             file_stream_close(app->file_stream);
             stream_free(app->file_stream);
+            furi_string_free(filepath);  // Fix: Free filepath on error
             return false;
         } else {
             FURI_LOG_E(
@@ -312,6 +315,7 @@ bool unitemp_sensors_load(void) {
             //Закрытие потока и освобождение памяти
             file_stream_close(app->file_stream);
             stream_free(app->file_stream);
+            furi_string_free(filepath);  // Fix: Free filepath on error
             return false;
         }
     }
@@ -324,6 +328,7 @@ bool unitemp_sensors_load(void) {
         //Закрытие потока и освобождение памяти
         file_stream_close(app->file_stream);
         stream_free(app->file_stream);
+        furi_string_free(filepath);  // Fix: Free filepath on error
         return false;
     }
     //Выделение памяти под загрузку файла
@@ -337,6 +342,7 @@ bool unitemp_sensors_load(void) {
         //Закрытие потока и освобождение памяти
         file_stream_close(app->file_stream);
         stream_free(app->file_stream);
+        furi_string_free(filepath);  // Fix: Free filepath on error
         free(file_buf);
         return false;
     }
@@ -386,8 +392,10 @@ bool unitemp_sensors_load(void) {
     }
 
     free(file_buf);
+    furi_string_free(file);  // Fix: Free the FuriString
     file_stream_close(app->file_stream);
     stream_free(app->file_stream);
+    furi_string_free(filepath);  // Fix: Free the filepath FuriString
 
     FURI_LOG_I(APP_NAME, "Sensors have been successfully loaded");
     return true;
@@ -415,6 +423,7 @@ bool unitemp_sensors_save(void) {
         //Закрытие потока и освобождение памяти
         file_stream_close(app->file_stream);
         stream_free(app->file_stream);
+        furi_string_free(filepath);  // Fix: Free filepath on error
         return false;
     }
 
@@ -465,6 +474,7 @@ bool unitemp_sensors_save(void) {
     //Закрытие потока и освобождение памяти
     file_stream_close(app->file_stream);
     stream_free(app->file_stream);
+    furi_string_free(filepath);  // Fix: Free the filepath FuriString
 
     FURI_LOG_I(APP_NAME, "Sensors have been successfully saved");
     return true;

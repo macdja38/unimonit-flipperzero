@@ -62,6 +62,7 @@ bool unitemp_saveSettings(void) {
         //Закрытие потока и освобождение памяти
         file_stream_close(app->file_stream);
         stream_free(app->file_stream);
+        furi_string_free(filepath);  // Fix: Free filepath on error
         return false;
     }
 
@@ -74,6 +75,7 @@ bool unitemp_saveSettings(void) {
     //Закрытие потока и освобождение памяти
     file_stream_close(app->file_stream);
     stream_free(app->file_stream);
+    furi_string_free(filepath);  // Fix: Free filepath on success
 
     FURI_LOG_I(APP_NAME, "Settings have been successfully saved");
     return true;
@@ -99,6 +101,7 @@ bool unitemp_loadSettings(void) {
             //Закрытие потока и освобождение памяти
             file_stream_close(app->file_stream);
             stream_free(app->file_stream);
+            furi_string_free(filepath);  // Fix: Free filepath on error
             //Сохранение стандартного конфига
             unitemp_saveSettings();
             return false;
@@ -110,6 +113,7 @@ bool unitemp_loadSettings(void) {
             //Закрытие потока и освобождение памяти
             file_stream_close(app->file_stream);
             stream_free(app->file_stream);
+            furi_string_free(filepath);  // Fix: Free filepath on error
             return false;
         }
     }
@@ -122,6 +126,7 @@ bool unitemp_loadSettings(void) {
         //Закрытие потока и освобождение памяти
         file_stream_close(app->file_stream);
         stream_free(app->file_stream);
+        furi_string_free(filepath);  // Fix: Free filepath on error
         //Сохранение стандартного конфига
         unitemp_saveSettings();
         return false;
@@ -137,6 +142,7 @@ bool unitemp_loadSettings(void) {
         //Закрытие потока и освобождение памяти
         file_stream_close(app->file_stream);
         stream_free(app->file_stream);
+        furi_string_free(filepath);  // Fix: Free filepath on error
         free(file_buf);
         return false;
     }
@@ -173,8 +179,10 @@ bool unitemp_loadSettings(void) {
         line_end = furi_string_search_char(file, '\n', line_end + 1);
     }
     free(file_buf);
+    furi_string_free(file);  // Fix: Free the FuriString
     file_stream_close(app->file_stream);
     stream_free(app->file_stream);
+    furi_string_free(filepath);  // Fix: Free filepath on success
 
     FURI_LOG_I(APP_NAME, "Settings have been successfully loaded");
     return true;
@@ -278,9 +286,12 @@ static void unitemp_free(void) {
     FURI_LOG_I(APP_NAME, "[FREE] Freeing app buff at %p", app->buff);
     free(app->buff);
 
-    // Clear tick callback before freeing view dispatcher
-    FURI_LOG_I(APP_NAME, "[LIFECYCLE] Clearing tick event callback");
+    // Clear all callbacks before freeing view dispatcher
+    FURI_LOG_I(APP_NAME, "[LIFECYCLE] Clearing all view dispatcher callbacks");
     view_dispatcher_set_tick_event_callback(app->view_dispatcher, NULL, 0);
+    view_dispatcher_set_navigation_event_callback(app->view_dispatcher, NULL);
+    view_dispatcher_set_custom_event_callback(app->view_dispatcher, NULL);
+    view_dispatcher_set_event_callback_context(app->view_dispatcher, NULL);
 
     view_dispatcher_free(app->view_dispatcher);
     furi_record_close(RECORD_GUI);
